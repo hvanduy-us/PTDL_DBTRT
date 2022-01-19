@@ -46,29 +46,33 @@ def RWM(models, data, T = 10, epsilon = 1.0, theta= 0.75):
     Ws = np.ones(k)
 
     for t in range(T):
-        weights_for_choices = [0.5, 0.5]
-
+        weights_for_choices = Ws / np.sum(Ws)
+        #print("weight choise: ", weights_for_choices)
         choices = np.array(random.choices(list(enumerate(models)), weights = weights_for_choices, k = n))
         #print("coef t = ", t, " = ", coef )
-
+       # [0: S1, 1:S2]
+        l_i_t = 0
         for j in range(n):
+
+            i = choices[j][0] 
             # Chuyen gia duoc chon
-            i = choices[j][0]
+            #print("i: ", i)      
             y_pred_model = choices[j][1].predict([data[0][j]])
 
             y_tr[j] = y_pred_model
             # l_i_t = | y_pred_model - y |  theo mo hinh S1 | S2
-            l_i_t = y_pred_model - data[1][j]
+            l_i_t = abs(y_pred_model - data[1][j])
 
-            #cap nhap Ws
-            Ws[i] = Ws[i] * np.exp(-eta * l_i_t)
+        #cap nhap Ws
+        Ws[i] = Ws[i] * np.exp(-eta * l_i_t) 
+        print("Ws t = ",i, ": ", Ws)
+        # Tong mat mat
+        l_t[i] += l_i_t
 
-            # Tong mat mat
-            l_t[i] += l_i_t
-
+    print("l_t:",l_t)
     #trung binh mat mat cua chuyen gia i tren vong  T
     l_t /= T 
-
+    
     regr = linear_model.LinearRegression()
     regr.fit(X_tr, y_tr)
 
@@ -83,12 +87,19 @@ def main():
     data.head()
 
     #chia du lieu thanh 3 phan D1, D2, D3
+     #4 : 4: 2
     D_size = int(len(data) * 0.4)
     D1 = data[:D_size]
     D2 = data[D_size:D_size*2]
     D3 = data[: int(D_size / 2)]
 
+    # y = Ax+b
     # Chia du lieu cho phan train va test
+    #X = height
+    # Y = weight
+    # D1 size = 4000 
+    # train 3200
+
     X1 = D1.copy().drop(["Gender" ,"Weight"],axis = 1)
     y1 = D1["Weight"]
     X_train_1, X_test_1, y_train_1, y_test_1 = train_test_split(X1, y1, test_size=0.2, random_state=42)
@@ -129,8 +140,9 @@ def main():
     # Chạy thử mô hình
     y_pred_model = regr.predict(X_test_3)
     
+    #
     # Regret
-    print("Mat mat",Regret)
+    print("Regret: ",Regret)
     # The coefficients
     print("Coefficients: \n", regr.coef_)
     # The mean squared error

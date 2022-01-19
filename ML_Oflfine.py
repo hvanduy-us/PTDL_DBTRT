@@ -54,6 +54,7 @@ def Co_Mau(q,SE):
 
 def main():
     ##x = np.array(['Ali','Join', 'Bob','Jack','Donal']).reshape((-1, 1))
+    
     y = np.random.randint(0,2,500).reshape((-1, 1))
     result = Toss_a_Coin(y)
     
