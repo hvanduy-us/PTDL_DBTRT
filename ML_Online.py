@@ -33,45 +33,50 @@ def Plot(X_test,y_test,y_pred):
 #output: 
 # regret: sai lam cua cac chuyen gia
 # coef: he so moi cua mo hinh     
-def RWM(models, data, coef, T = 10, epsilon = 1.0, theta= 0.75):
+def RWM(models, data, T = 10, epsilon = 1.0, theta= 0.75):
 
     eta = epsilon / np.sqrt(32 * T * np.log(1 / theta)) 
     k = len(models)
     n = len(data[0])
     l_t = np.zeros(k)
-    
+    X_tr = data[0][:]
+    y_tr = np.zeros(n)
+
     #khoi tao trong so = 1 cho k chuyen gia
     Ws = np.ones(k)
+
     for t in range(T):
         weights_for_choices = [0.5, 0.5]
 
         choices = np.array(random.choices(list(enumerate(models)), weights = weights_for_choices, k = n))
-        print("coef t = ", t, " = ", coef )
+        #print("coef t = ", t, " = ", coef )
 
         for j in range(n):
             # Chuyen gia duoc chon
             i = choices[j][0]
-
             y_pred_model = choices[j][1].predict([data[0][j]])
+
+            y_tr[j] = y_pred_model
             # l_i_t = | y_pred_model - y |  theo mo hinh S1 | S2
             l_i_t = y_pred_model - data[1][j]
 
-            # Ax + b = y
-            # A' = ((y + dental) - b) / (x + dental)
-            coef = (y_pred_model - choices[j][1].intercept_) / (data[0][j] + l_i_t)
-
             #cap nhap Ws
-            Ws[i] *= np.exp((-eta) * l_i_t)
+            Ws[i] = Ws[i] * np.exp(-eta * l_i_t)
 
             # Tong mat mat
             l_t[i] += l_i_t
+
     #trung binh mat mat cua chuyen gia i tren vong  T
     l_t /= T 
 
+    regr = linear_model.LinearRegression()
+    regr.fit(X_tr, y_tr)
+
     #Sai lam cua cac chuyen gia 
     l_t -= np.amin(l_t)
-    return l_t, coef
-    
+    return l_t, regr, Ws
+     
+
 def main():
     #doc du lieu tu file weight_height vao data
     data = pd.read_csv('weight-height.csv')
@@ -107,10 +112,10 @@ def main():
     y_pred_2 = S2.predict(X_test_2)
     MSE_2 = mean_squared_error(y_test_1, y_pred_2, squared=False)
 
-    S = linear_model.LinearRegression()
-    S.fit(X_train_3, y_train_3)
-    y_pred = S.predict(X_test_3)
-    MSE = mean_squared_error(y_test_3, y_pred, squared=False)
+    # S = linear_model.LinearRegression()
+    # S.fit(X_train_3, y_train_3)
+    # y_pred = S.predict(X_test_3)
+    # MSE = mean_squared_error(y_test_3, y_pred, squared=False)
 
     warnings.filterwarnings("ignore")
     # Chuẩn bị dữ liệu để chạy thuật giải
@@ -119,21 +124,20 @@ def main():
     train_data.append(np.array(X_train_3))
     train_data.append(np.array(y_train_3))
 
-    Regret, coef = RWM(experts, train_data, S.coef_, 20)
-
-    S.coef_ = coef
+    Regret, regr, Ws = RWM(experts, train_data, 20)
 
     # Chạy thử mô hình
-    y_pred_model = S.predict(X_test_3)
-    MSE = mean_squared_error(y_test_3, y_pred_model, squared=False)
+    y_pred_model = regr.predict(X_test_3)
+    
     # Regret
     print("Mat mat",Regret)
     # The coefficients
-    print("Coefficients: \n", S.coef_)
+    print("Coefficients: \n", regr.coef_)
     # The mean squared error
-    print("Mean squared error: %.2f" % mean_squared_error(y_test_3, y_pred_model))
+    print("Mean squared error: " , mean_squared_error(y_test_3, y_pred_model, squared=False))
     # The coefficient of determination: 1 is perfect prediction
     print("Coefficient of determination: %.2f" % r2_score(y_test_3, y_pred_model))
+
     Plot(X_test_3,y_test_3,y_pred_model)
 
 

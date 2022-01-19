@@ -56,11 +56,13 @@ def main():
     ##x = np.array(['Ali','Join', 'Bob','Jack','Donal']).reshape((-1, 1))
     y = np.random.randint(0,2,500).reshape((-1, 1))
     result = Toss_a_Coin(y)
+    
     q = Do_Bao_Mat(len(result), 0.05)
     print('ket qua thong ke: ', result)
     print('Do chinh xac Detal: ',0.05)
     print('Do bao mat voi co mau ',len(result),': ',q)
     #print('Sai so chuan theo q: ', 1 / q)
+
 if __name__ == "__main__":
     main()
         
