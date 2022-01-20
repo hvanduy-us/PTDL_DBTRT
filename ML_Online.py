@@ -65,7 +65,7 @@ def RWM(models, data, T = 10, epsilon = 1.0, theta= 0.75):
 
         #cap nhap Ws
         Ws[i] = Ws[i] * np.exp(-eta * l_i_t) 
-        print("Ws t = ",i, ": ", Ws)
+        print("Ws i = ",i, ": ", Ws)
         # Tong mat mat
         l_t[i] += l_i_t
 
